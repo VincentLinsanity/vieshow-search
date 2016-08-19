@@ -1,0 +1,12 @@
+basickoaframework:
+  image: vincentlinsanity/basickoaframework:latest
+  links:
+    - "mongo:mongo"
+  ports:
+    - "80:3000"
+mongo:
+  image: mongodb:3.0.7
+  expose:
+    - 27017
+  volumes:
+    - '/home/docker/compose/basic-koa-framework/mongo:/data/db'
