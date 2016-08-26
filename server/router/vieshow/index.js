@@ -9,6 +9,7 @@ var url = basicUrl + 'ticket.aspx';
 var prefix = '?cinema=';
 var vieshowLib = require('./vieshowLib');
 var basicBookUrl = 'https://sales.vscinemas.com.tw/Ticketing/';
+var fs = require('fs');
 
 /**
  * function getCinemaList
@@ -33,8 +34,11 @@ function* getCinemaList() {
         cinemas.push(cinemaObj);
     });
     cinemas.shift();
+    this.set("Access-Control-Allow-Origin", "http://localhost:8000");
+    this.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    this.set('Access-Control-Allow-Credentials', 'true');
     this.response.body = {
-        cinemaList: cinemas
+        data: cinemas
     };
 }
 
@@ -62,17 +66,13 @@ function* getMovieList() {
         movies.push(movieObj);
     });
 
-    var html = "<div class='list-group'>";
-    for (var movie in movies) {
-        html　+=
-            "<a href=http://localhost:9001/vieshow/movieTime/" + movies[movie].movieHref
-          + " class='list-group-item list-group-item-success'>" + movies[movie].movieName + "</a>"
-          ;
-    }
-    html += "</div>";
+    this.set("Access-Control-Allow-Origin", "http://localhost:8000");
+    this.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    this.set('Access-Control-Allow-Credentials', 'true');
 
-    this.response.body = html;
-        
+    this.response.body = {
+        data: movies
+    }
 }
 
 /**
@@ -91,24 +91,35 @@ function* getMovieTime() {
     let timeLists = $(resBody).find('.movieDay');
 
     let dayInfo = [];
-    for (let i = 0; i < timeLists.length; i++ ) {
+    let movieInfo = vieshowLib.parseListToInfo(infoLists);
+    dayInfo.push(movieInfo);
+    for (let i = 0; i < timeLists.length; i++) {
         vieshowLib.parseListToBookInfo(timeLists[i], dayInfo);
     };
-    console.log(dayInfo);
 
-    let movieInfo = vieshowLib.parseListToInfo(infoLists);
-    console.log(movieInfo);
+    this.set("Access-Control-Allow-Origin", "http://localhost:8000");
+    this.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    this.set('Access-Control-Allow-Credentials', 'true');
 
-    // 
-    // step1 basicUrl/booking.aspx?cinemacode=1&txtSessionId=1067212
+    this.response.body = {
+        data: dayInfo
+    }
+}
 
-    // step2 get bookUrl/visSelectTickets.aspx?agree=on&cinemacode=1&txtSessionId=1067214
-    // step3 post bookUrl/visSelectTickets.aspx?agree=on&cinemacode=1&txtSessionId=1067214
-    // setop4 get bookUrl/visSelectSeats.aspx?visLang=1
+function* getSeat() {
+    var body = yield vieshowLib.getSeat(this.params.href);
+
+    var seatBody = $(body).html('.Seating-Theatre');
+    console.log(seatBody);
+    fs.writeFile('seat.html', seatBody.html(), (err) => {
+        if (err) throw err;
+        console.log('It\'s saved!');
+    });
 }
 
 module.exports.register = (router) => {
     router.get('/vieshow/cinemaList', getCinemaList);
     router.get('/vieshow/movieList/:id', getMovieList);
     router.get('/vieshow/movieTime/:id', getMovieTime);
+    router.get('/vieshow/seat/:href', getSeat);
 };
