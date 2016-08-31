@@ -4,7 +4,6 @@ let $ = require('cheerio');
 let request = require('request');
 request = request.defaults({ jar: true });
 
-
 exports.parseListToInfo = function (lists) {
     let movieInfo = {
         date: '',
@@ -58,7 +57,10 @@ exports.getSeat = function (param, callback) {
             var form = parseForm(res.body);
             request.post({ url: nextUrl, formData: formData }, function (err, res, body) {
                 request.get(finaurl, function (err, res, body) {
-                    resolve (body);
+                    if (err) {
+                        return false;
+                    }
+                    resolve(body);
                 });
             });
         });
@@ -102,4 +104,16 @@ function parseForm(body) {
     formData.__VIEWSTATEGENERATOR = __VIEWSTATEGENERATOR;
     formData.__EVENTVALIDATION = __EVENTVALIDATION;
     //formData.VistaUserSessionId = VistaUserSessionId;
+}
+
+exports.getTitle = function(resBody) {
+    let titleBody = $(resBody).find('#theater');
+    var title = '';
+    var titleList = titleBody[0].children;
+    for (var index in titleList) {
+        if (titleList[index].attribs && titleList[index].attribs.selected) {
+            title = titleList[index].children[0].data;
+        }
+    }
+    return title;
 }
