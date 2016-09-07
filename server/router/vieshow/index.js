@@ -16,24 +16,24 @@ var dirName = require('path').dirname;
  * get cinema list url = url
  */
 function* getCinemaList() {
-    let resBody = yield lib.parseBody(url).then((body) => {
+    var resBody = yield lib.parseBody(url).then((body) => {
         return body;
     });
-    let body = $(resBody).find('#theater').children();
+    var body = $(resBody).find('#theater').children();
 
     var cinemas = [];
     body.map((index, list) => {
-        let cinemaName = list.children[0].data;
-        let postfix = list.attribs.value;
-        let cinemaUrl = url + prefix + postfix;
-        let cinemaObj = {
+        var cinemaName = list.children[0].data;
+        var postfix = list.attribs.value;
+        var cinemaUrl = url + prefix + postfix;
+        var cinemaObj = {
             'cinemaName': cinemaName,
             'cinemaID': postfix,
             'cinemaUrl': cinemaUrl
         }
         cinemas.push(cinemaObj);
     });
-    cinemas.shift();
+    cinemas.shift(); // remove title
 
     this.response.body = {
         data: cinemas
@@ -53,7 +53,8 @@ function* getMovieList() {
     var body = $(resBody).find('.movieList').children();
     var movies = [];
     var title = vieshowLib.getTitle(resBody);
-    movies.push({movieName: title});
+    var cinemaList = vieshowLib.getTitleList(resBody);
+    // movies.push({movieName: title});
     body.map((index, list) => {
         var movieList = list.children[0];
         var movieHref = movieList.attribs.href;
@@ -66,7 +67,9 @@ function* getMovieList() {
     });
 
     this.response.body = {
-        data: movies
+        title: title,
+        data: movies,
+        cinemaList: cinemaList
     }
 }
 
@@ -75,23 +78,23 @@ function* getMovieList() {
  * get movie time url = url + ? + movieHref
  */
 function* getMovieTime() {
-    let movieTimeId = this.params.id;
-    let movieTimeUrl = url + '?' + movieTimeId;
+    var movieTimeId = this.params.id;
+    var movieTimeUrl = url + '?' + movieTimeId;
     console.log(movieTimeUrl);
 
-    let resBody = yield lib.parseBody(movieTimeUrl).then((body) => {
+    var resBody = yield lib.parseBody(movieTimeUrl).then((body) => {
         return body;
     });
-    
-    let infoLists = $(resBody).find('.movieDescribe').children();
-    let timeLists = $(resBody).find('.movieDay');
 
-    let dayInfo = [];
+    var infoLists = $(resBody).find('.movieDescribe').children();
+    var timeLists = $(resBody).find('.movieDay');
+
+    var dayInfo = [];
     var title = vieshowLib.getTitle(resBody);
-    dayInfo.push({date:title});
-    let movieInfo = vieshowLib.parseListToInfo(infoLists);
-    dayInfo.push(movieInfo);
-    for (let i = 0; i < timeLists.length; i++) {
+    // dayInfo.push({date:title});
+    var movieInfo = vieshowLib.parseListToInfo(infoLists);
+    // dayInfo.push(movieInfo);
+    for (var i = 0; i < timeLists.length; i++) {
         vieshowLib.parseListToBookInfo(timeLists[i], dayInfo);
     };
 
@@ -119,12 +122,12 @@ function* getSeat() {
 }
 
 function arrangeBody(body) {
-    var basicBody = '<div class="Seating-Theatre" style="width:450px;height:225px;" data-originalsize="225"></div>';
+    var basicBody = '<div class="Seating-Theatre" style="width:450px;height:725px;" data-originalsize="225"></div>';
     var seatBody = $(body).find('.Seating-Theatre');
     return $(basicBody).prepend(seatBody);
 }
 
-function writeFile(data, path) { 
+function writeFile(data, path) {
     fs.writeFile(__dirname + '/store/' + path + '.html',
         data.toString(), (err) => {
             if (err) throw err;

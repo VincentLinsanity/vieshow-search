@@ -1,6 +1,6 @@
 'use strict';
 
-var fs =require('fs');
+var fs = require('fs');
 var $ = require('cheerio');
 var request = require('request');
 request = request.defaults({ jar: true });
@@ -9,28 +9,66 @@ var tickUrl = 'https://sales.vscinemas.com.tw/vsTicketing/ticketing/booking.aspx
 var testUrl = 'https://sales.vscinemas.com.tw/Ticketing/visSelectTickets.aspx?agree=on&cinemacode=1&txtSessionId=1067212';
 var finaurl = 'https://sales.vscinemas.com.tw/Ticketing/visSelectSeats.aspx?visLang=1';
 
-function test() {
-  request.get(tickUrl, function (err, res, body) {
-    console.log('step1');
-    request.get(testUrl, function (err, res, body) {
-      console.log('step2');
-      request.post({url: testUrl, formData: formData}, function (err, res, body) {
-        console.log('step3');
-        request.get(finaurl, function (err, res, body) {
-          console.log('step4');
-          console.log(body);
-          fs.writeFile('./tmp.html', body, function(err) {
-            console.log(err);
-          })
-        });
-      });
-    });
-  });
+// function test() {
+//   request.get(tickUrl, function (err, res, body) {
+//     console.log('step1');
+//     request.get(testUrl, function (err, res, body) {
+//       console.log('step2');
+//       request.post({url: testUrl, formData: formData}, function (err, res, body) {
+//         console.log('step3');
+//         request.get(finaurl, function (err, res, body) {
+//           console.log('step4');
+//           console.log(body);
+//           fs.writeFile('./tmp.html', body, function(err) {
+//             console.log(err);
+//           })
+//         });
+//       });
+//     });
+//   });
 
 
+// }
+
+function test(n) {
+  var list = n.toString(2).split('');
+  var d = 0;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i] == 1) {
+      for (var j = i + 1; j < list.length; j++) {
+        if (list[j] == 1) {
+          var td = j - i - 1;
+          //i = j + 1;
+          if (d < td) d = td;
+          break;
+        }
+      }
+    }
+  }
+  return d;
 }
 
-test();
+test1([0,1,2,3,4,5,6], 3);
+
+function test1(array, k) {
+  var n = array.length;
+  var init = k;
+  while(k > n) {
+    k -= n;
+  }
+  if (k == 0) {
+    return
+  }
+  k = n - k;
+  var result = [];
+  for (var i = k; i < n; i++) {
+    result.push(array[i]);
+  }
+  for (var j = 0 ; j < k; j++) {
+    result.push(array[j]);
+  }
+  return result;
+}
 
 var formData = {
   __EVENTTARGET: 'ctl00$ContentBody$ibtnOrderTickets',
