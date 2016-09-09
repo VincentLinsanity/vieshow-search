@@ -117,7 +117,8 @@ function* getSeat() {
     if (!result) return;
 
     this.response.body = {
-        data: result.toString()
+        data: result.toString(),
+        href: href
     };
 }
 
