@@ -135,9 +135,28 @@ function writeFile(data, path) {
         });
 }
 
+function* clearStore() {
+    var rimraf = require('rimraf');
+    var mkdirp = require('mkdirp');
+
+    rimraf(__dirname + '/store/', function (err, info) {
+        if (err) throw err;
+        
+        mkdirp(__dirname + '/store/', function (err) {
+            if (err) throw err;
+        });
+    });
+}
+
+function* test() {
+    console.log('yes');
+}
+
 module.exports.register = (router) => {
     router.get('/vieshow/cinemaList', getCinemaList);
     router.get('/vieshow/movieList/:id', getMovieList);
     router.get('/vieshow/movieTime/:id', getMovieTime);
     router.get('/vieshow/seat/:href', getSeat);
+    router.get('/vieshow/clear', clearStore);
+    router.post('/loadtest', test);
 };

@@ -1,13 +1,108 @@
 'use strict';
 
+var assert = require('assert');
 var fs = require('fs');
-var $ = require('cheerio');
 var request = require('request');
+var loadScript = process.env.script || 'test';
+var defaultTimeout = process.env.defaultTimeout || 3000;
+var url = process.env.postUrl || 'localhost';
 request = request.defaults({ jar: true });
 
-var tickUrl = 'https://sales.vscinemas.com.tw/vsTicketing/ticketing/booking.aspx?cinemacode=1&txtSessionId=1067212';
-var testUrl = 'https://sales.vscinemas.com.tw/Ticketing/visSelectTickets.aspx?agree=on&cinemacode=1&txtSessionId=1067212';
-var finaurl = 'https://sales.vscinemas.com.tw/Ticketing/visSelectSeats.aspx?visLang=1';
+function main() {
+  var postList = null;
+  try {
+    postList = arrangeData(loadScript);
+  } catch (error) {
+    throw error;
+  }
+  var lnegth = postList.length;
+  var i = 0;
+  repeter(i);
+  
+  function repeter(i) {
+    if (i < length) {
+      postData(url, postList[i].mode, postList[i].params, 
+      function (err, res, body) {
+        if (err) throw err;
+        else {
+          var timeout = getTimeout(postList[i].time, postList[i + 1].time);
+          setTimeout(repeter(i + 1), timeout);
+        }
+      });
+    }
+  }
+
+}
+
+function postData(url, mode, params, callback) {
+  var data = {
+    mode: mode,
+    params: params,
+  }
+  request.post({ url: url, data: data }, function (err, res, body) {
+    if (err) return callback(err);
+    return callback(null, res, body);
+  });
+}
+
+function getTimeout(time1, time2) {
+  assert(time1, 'time can not be empty');
+  assert(time2, 'time can not be empty');
+  var wait = 0;
+  try {
+    time1Array = time1.split(':');
+    time2Array = time2.split(':');
+    var hour = time2[0] - time1[0];
+    var min = time2[1] - time1[1];
+    var sec = time2[2] - time1[2];
+    var wait = hour * 3600 + min * 60 + sec;
+  } catch (error) {
+    return 3000;
+  }
+  if (wait == 0) {
+    wait = defaultTimeout;
+  }
+  return wait * 1000;
+}
+
+function arrangeData(loadScript) {
+  assert(loadScript, 'loadScript can not be empty')
+  // read file and convert to string array
+  var txtFile = '';
+  try {
+    txtFile = fs.readFileSync(__dirname + '/config/' + loadScript + '.txt', 'utf8');
+  } catch (err) {
+    if (err) throw error;
+  }
+  var txtString = txtFile.toString();
+  var txtArray = txtString.split('\r\n');
+
+  // remove blank line
+  var txtArrayArrange = [];
+  for (var index in txtArray) {
+    if (txtArray[index] !== '') {
+      txtArrayArrange.push(txtArray[index]);
+    }
+  }
+
+  // convert string array to json obj array
+  var jsonArray = [];
+  for (var index = 0; index < txtArrayArrange.length; index += 3) {
+    var jsonObj = {
+      time: '',
+      mode: '',
+      params: '',
+    };
+
+    jsonObj.time = txtArrayArrange[index];
+    jsonObj.mode = txtArrayArrange[index + 1];
+    jsonObj.params = txtArrayArrange[index + 2];
+    jsonArray.push(jsonObj);
+  }
+  console.log(jsonArray);
+  return jsonArray;
+}
+
 
 // function test() {
 //   request.get(tickUrl, function (err, res, body) {
@@ -48,12 +143,12 @@ function test(n) {
   return d;
 }
 
-test1([0,1,2,3,4,5,6], 3);
+test1([0, 1, 2, 3, 4, 5, 6], 3);
 
 function test1(array, k) {
   var n = array.length;
   var init = k;
-  while(k > n) {
+  while (k > n) {
     k -= n;
   }
   if (k == 0) {
@@ -64,7 +159,7 @@ function test1(array, k) {
   for (var i = k; i < n; i++) {
     result.push(array[i]);
   }
-  for (var j = 0 ; j < k; j++) {
+  for (var j = 0; j < k; j++) {
     result.push(array[j]);
   }
   return result;
